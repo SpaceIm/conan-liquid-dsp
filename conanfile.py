@@ -40,6 +40,9 @@ class LiquidDspConan(ConanFile):
     def validate(self):
         if self.settings.compiler == "Visual Studio":
             raise ConanInvalidConfiguration("liquid-dsp does not support Visual Studio")
+        # FIXME: static on macos should work, there is something to fix in upstream makefile.in
+        if tools.is_apple_os(self.settings.os) and not self.options.shared:
+            raise ConanInvalidConfiguration("Issue with liquid-dsp static and libtool")
 
     def build_requirements(self):
         self.build_requires("libtool/2.4.6")
@@ -60,7 +63,7 @@ class LiquidDspConan(ConanFile):
             if tools.is_apple_os(self.settings.os):
                 target = "libliquid.dylib" if self.options.shared else "libliquid.ar"
             elif self.settings.os == "Windows":
-                target = "libliquid.a"
+                target = "libliquid.a" # Does it work? What about shared?
             else:
                 target = "libliquid.so" if self.options.shared else "libliquid.a"
             autotools.make(target=target)
